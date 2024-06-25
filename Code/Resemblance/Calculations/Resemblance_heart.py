@@ -7,6 +7,7 @@ from glob import glob
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 
+
 import os
 
 pd.set_option('display.width', None)
@@ -22,7 +23,36 @@ os.chdir("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/synthe
 all_data = pd.DataFrame()
 dataframes = {}
 
-for file_names in os.listdir():
+
+
+def custom_sort(file_name):
+    if file_name.endswith(".csv"):
+        file_name = file_name[:-4]  # Entferne ".csv"
+
+    parts = file_name.split("_")
+    model = parts[1]
+
+    # Überprüfen, ob eine Lambda-Angabe vorhanden ist
+    if len(parts) == 4:
+        epoch = int(parts[2])
+        lambda_value = parts[3]
+    else:  # Kein Lambda vorhanden
+        epoch = int(parts[2])
+        lambda_value = ""  # Leerer String für Lambda
+
+    model_priority = {"tabfairgan": 1, "distcorrgan": 2, "multifairgan": 3, "decaf": 4, "TVAE": 5, "CTGAN": 6}
+    lambda_priority = {"02": 1, "04": 2, "06": 3, "08": 4, "1": 5, "15": 6, "2": 7, "5": 8}
+
+    return model_priority.get(model, 99), epoch, lambda_priority.get(lambda_value, 99)
+
+file_names = os.listdir()
+
+sorted_files = sorted(file_names, key=custom_sort)
+
+print(file_names)
+
+"""
+for file_names in sorted_files:
     file_path = os.path.join(file_names)
     dataframes[file_names] = pd.read_csv(file_path)
 
@@ -53,8 +83,6 @@ for file_names in os.listdir():
 
     all_data = pd.concat([all_data, data], axis=1)
 
-
-
 all_data.to_excel("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Code/Resemblance/Reports/Resemblance_Report_heart.xlsx", index=False)
 
 
@@ -62,3 +90,4 @@ all_data.to_excel("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Co
 
 
 
+"""
