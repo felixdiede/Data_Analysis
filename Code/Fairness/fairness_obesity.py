@@ -10,6 +10,8 @@ import styleframe
 
 os.chdir("/Users/felixdiederichs/PycharmProjects/Results_Analysis/.venv/Data/synthetic/obesity")
 
+num_features = ["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE"]
+
 # Basisverzeichnis für die Datendateien
 data_directory = "/Users/felixdiederichs/PycharmProjects/Results_Analysis/.venv/Data/synthetic/obesity"
 
@@ -30,6 +32,9 @@ for file_path in data_files:
     data = pd.read_csv(file_path)
 
     data = pd.get_dummies(data)
+
+    scaler = MinMaxScaler()
+    data[num_features] = scaler.fit_transform(data[num_features])
 
     # Features und Zielvariable trennen
     X = data.drop("NObeyesdad", axis=1)

@@ -34,7 +34,6 @@ for file_path in data_files:
 
     data = pd.get_dummies(data)
 
-
     # Features und Zielvariable trennen
     X = data.drop("HeartDisease", axis=1)
     y = data["HeartDisease"]
