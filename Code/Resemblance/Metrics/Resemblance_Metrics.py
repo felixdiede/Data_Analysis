@@ -8,7 +8,6 @@ from scipy.spatial.distance import jensenshannon
 from sklearn.metrics.pairwise import cosine_distances
 from scipy import spatial
 
-
 from scipy.special import kl_div
 from scipy import stats
 from scipy.stats import entropy, wasserstein_distance
@@ -70,7 +69,7 @@ def t_test(real_data: pd.DataFrame, synthetic_data: pd.DataFrame, attribute: str
     vector2 = np.array(synthetic_data[attribute])
 
     # Calculation of the actual test. The function ttest_ind() itself stems from the "scipy.stats" module
-    t_statistic, p_value = ttest_ind(vector1, vector2, equal_var=False, alternative="two-sided")
+    t_statistic, p_value = ttest_ind(vector1, vector2) # equal_var=False, alternative="two-sided"
 
     # "H0 is rejected, if the p-value is smaller than alpha. Means of synthetic and real data are not equal. For this attribute, the resamblance is not given."
     if p_value < alpha:
@@ -79,22 +78,26 @@ def t_test(real_data: pd.DataFrame, synthetic_data: pd.DataFrame, attribute: str
     else:
         conclusion = "positive"
 
+
     return t_statistic, p_value, conclusion
 
 
 def print_results_t_test(real_data: pd.DataFrame, synthetic_data: pd.DataFrame, attribute):
+    p_val = []
     positive = 0
     negative = 0
 
     for attr in attribute:
         t_statistic, p_value, conclusion = t_test(real_data, synthetic_data, attr)
 
+        p_val.append(p_value)
+
         if conclusion == "positive":
             positive += 1
         else:
             negative += 1
 
-    return positive, negative
+    return p_val, positive, negative
 
 
 
@@ -112,7 +115,8 @@ def mw_test(real_data: pd.DataFrame, synthetic_data: pd.DataFrame, attribute, al
     vector1 = np.array(real_data[attribute])
     vector2 = np.array(synthetic_data[attribute])
 
-    mw_statistic, p_value = mannwhitneyu(vector1, vector2, alternative="two-sided")
+    mw_statistic, p_value = mannwhitneyu(vector1, vector2) #, alternative="two-sided"
+
 
     if p_value < alpha:
         conclusion = "negative"
@@ -128,6 +132,7 @@ def mw_test(real_data: pd.DataFrame, synthetic_data: pd.DataFrame, attribute, al
 
 
 def print_results_mw_test(real_data, synthetic_data, attribute):
+    p_val = []
     positive = 0
     negative = 0
 
@@ -147,7 +152,7 @@ def ks_test(real_data, synthetic_data, attribute, alpha=0.05):
     vector1 = np.array(real_data[attribute])
     vector2 = np.array(synthetic_data[attribute])
 
-    ks_statistic, p_value = stats.ks_2samp(vector1, vector2, alternative = "two-sided")
+    ks_statistic, p_value = stats.ks_2samp(vector1, vector2) # , alternative = "two-sided"
 
     if p_value < alpha:
         conclusion = "negative"
@@ -186,7 +191,7 @@ def chi2_test(real_data, synthetic_data, attribute, alpha=0.05):
 
     chi2, p, dof, expected = chi2_contingency(contingency_table)
 
-    if chi2 < alpha:
+    if p < alpha:
         conclusion = "positive"
             # "H0 is rejected. There exists a relationship between the real categorical variable and the synthetic categorical variable.
             # For this attribute, the resembalance is given."
@@ -212,16 +217,22 @@ def print_results_chi2_test(real_data, synthetic_data, attribute):
 
     return positive, negative
 
+def evaluation_categorical_statistical_tests(real_data, synthetic_data, cat_features):
+    positive_chi2, negative_chi2 = print_results_chi2_test(real_data, synthetic_data, cat_features)
+
+    proportion_positive_tests = positive_chi2 / (positive_chi2 + negative_chi2)
+
+    return round(proportion_positive_tests, 4)
 
 
-def evaluation_statistical_tests(real_data, synthetic_data, num_features, cat_features):
+
+def evaluation_numerical_statistical_tests(real_data, synthetic_data, num_features):
     positive_t, negative_t = print_results_t_test(real_data, synthetic_data, num_features)
     positive_mw, negative_mw = print_results_mw_test(real_data, synthetic_data, num_features)
     positive_ks, negative_ks = print_results_ks_test(real_data, synthetic_data, num_features)
-    positive_chi2, negative_chi2 = print_results_chi2_test(real_data, synthetic_data, cat_features)
 
-    total_positive_tests = positive_t + positive_mw + positive_ks + positive_chi2
-    total_negative_tests = negative_t + negative_mw + negative_ks + negative_chi2
+    total_positive_tests = positive_t + positive_mw + positive_ks
+    total_negative_tests = negative_t + negative_mw + negative_ks
     proportion_positive_tests = total_positive_tests / (total_negative_tests + total_positive_tests)
 
     return round(proportion_positive_tests, 4)
@@ -260,9 +271,11 @@ def results_cos_distance(real_data, synthetic_data, attribute, threshold=0.3):
 
 
 def js_distance(real_data, synthetic_data, attribute):
+
     vector1 = np.array(real_data[attribute])
     vector2 = np.array(synthetic_data[attribute])
 
+    # Bandbreite wird standardmäßig mit Scott's Rule berechnet
     kde1 = gaussian_kde(vector1)
     kde2 = gaussian_kde(vector2)
 
@@ -301,10 +314,25 @@ def was_distance(real_data, synthetic_data, attribute):
     vector1 = np.array(real_data[attribute])
     vector2 = np.array(synthetic_data[attribute])
 
+    """
     u_values = np.histogram(vector1)[0] / len(vector1)
     v_values = np.histogram(vector2)[0] / len(vector2)
+    
 
-    ws_distance = wasserstein_distance(u_values, v_values)
+    kde1 = gaussian_kde(vector1)
+    kde2 = gaussian_kde(vector2)
+
+    xmin = min(vector1.min(), vector2.min())
+    xmax = max(vector1.max(), vector2.max())
+    x = np.linspace(xmin, xmax, 100)
+
+    p = kde1(x)
+    p /= p.sum()
+    q = kde2(x)
+    q /= q.sum()
+    """
+
+    ws_distance = wasserstein_distance(vector1, vector2)
 
     return ws_distance
 
@@ -340,11 +368,7 @@ def evaluation_distances(real_data, synthetic_data, num_features):
 
 
 
-
-
-
-
-
+# Outdated?
 
 def calculate_and_display_distances(real_data, synthetic_data, attribute):
     thresholds = {
@@ -399,13 +423,14 @@ def calculate_and_display_distances(real_data, synthetic_data, attribute):
 
     return round(summary["true"]/ (summary["true"] + summary["false"]), 4)
 
+
+
 """
 Chapter 2: Multivariate Relationship Analysis
     2.1 PPC Matrices comparison
 """
 
 def ppc_matrix(real_data, synthetic_data, num_features, threshold=0.1):
-
 
     num_real_data = real_data[num_features]
     num_synthetic_data = synthetic_data[num_features]
@@ -438,35 +463,13 @@ def ppc_matrix(real_data, synthetic_data, num_features, threshold=0.1):
 Chapter 2: Multivariate Relationship Analysis
     2.2 Normalized contingency tables comparison
 """
-"""def normalized_contingency_tables(real_data, synthetic_data, attributes):
-    results = {}
-    for attr in attributes:
-        table = pd.crosstab(real_data[attr], synthetic_data[attr], normalize='all')
 
-        # Calculate the absolute deviation correctly
-        expected = np.outer(table.sum(axis=0), table.sum(axis=1)) / table.sum().sum()
-        absolute_deviation = np.sum(np.abs(table - expected))
-
-        table_md = table.to_markdown(numalign='left', stralign='left')
-
-        results[attr] = {
-            "Contingency tables (Markdown)": table_md,
-            "Absolute deviation": absolute_deviation
-        }
-
-    # Output the results
-    for attr, values in results.items():
-        print(f"\nAttribute: {attr}")
-        print(values["Contingency tables (Markdown)"])
-        print(f"Absolute deviation: {values['Absolute deviation']:.4f}")  # Formatting to 4 decimal places
-
-    return results"""
 
 
 """
 Chapter 3: DLA 
 """
-def data_labelling_analysis(real_data, synthetic_data, num_features, cat_features):
+def data_labelling_analysis(real_data, synthetic_data, num_features):
     # Label real and synthetic data
     real_data["label"] = 0
     synthetic_data["label"] = 1
