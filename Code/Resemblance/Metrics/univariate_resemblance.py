@@ -36,6 +36,7 @@ def student_t_tests(real, synthetic) :
 
     #get list of numerical column names
     num_cols = (real.select_dtypes(include=['int64','float64'])).columns
+    print(num_cols)
 
     #initialize a list to save the p-values of the tests
     p_values = []

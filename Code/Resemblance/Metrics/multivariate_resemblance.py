@@ -83,7 +83,6 @@ def get_categorical_correlations(df) :
     numpy.float64
         the norm of the normalized contingency table of the categorical attributes of the dataframe
     """
-
     #select categorical attributes of the dataframe
     df = df.select_dtypes(include=['category'])
 

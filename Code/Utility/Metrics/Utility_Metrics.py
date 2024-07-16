@@ -40,11 +40,27 @@ def trtr(real_data, target, num_features):
         for clf in classifiers:
             clf.fit(X_train, y_train)
             y_pred = clf.predict(X_test)
-            results[clf.__class__.__name__] = classification_report(y_test, y_pred, output_dict=True)
 
-        results_df = pd.DataFrame(results).transpose().drop(columns=["macro avg", "weighted avg"])
-        """print(results_df.to_markdown(numalign="left", stralign="left", floatfmt=".4f"))"""
-        print(results_df["accuracy"].to_string(index=False))
+            precision = precision_score(y_test, y_pred)
+            recall = recall_score(y_test, y_pred)
+            accuracy = accuracy_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred)
+
+            results[clf.__class__.__name__] = [precision, recall, accuracy, f1]
+
+        results_df = pd.DataFrame(results, index=["Precision", "Recall", "Accuracy", "F1"])
+
+        # Flatten the DataFrame into a Series
+        results_series = results_df.stack()
+
+        # Round the values to two decimal places
+        results_series = results_series.round(4)
+
+        # Return the Series of results
+        return results_series
+
+
+
 
 def tstr(real_data, synthetic_data, target, num_features):
     real_data = pd.get_dummies(real_data)
@@ -65,7 +81,6 @@ def tstr(real_data, synthetic_data, target, num_features):
     Xr = real_data.drop(target, axis=1)
     yr = real_data[target]
 
-
     X_train_s, X_test_s, y_train_s, y_test_s = train_test_split(Xs, ys, test_size=0.2, random_state=0)
 
     X_train_r, X_test_r, y_train_r, y_test_r = train_test_split(Xr, yr, test_size=0.2, random_state=0)
@@ -85,11 +100,24 @@ def tstr(real_data, synthetic_data, target, num_features):
         for clf in classifiers:
             clf.fit(X_train_s, y_train_s)
             y_pred = clf.predict(X_test_r)
-            results[clf.__class__.__name__] = classification_report(y_test_r, y_pred, output_dict=True)
 
-        results_df = pd.DataFrame(results).transpose()
-        """print(results_df.to_markdown(numalign="left", stralign="left", floatfmt=".4f"))"""
-        print(results_df["accuracy"].to_string(index=False))
+            precision = precision_score(y_test_r, y_pred)
+            recall = recall_score(y_test_r, y_pred)
+            accuracy = accuracy_score(y_test_r, y_pred)
+            f1 = f1_score(y_test_r, y_pred)
+
+            results[clf.__class__.__name__] = [precision, recall, accuracy, f1]
+
+        results_df = pd.DataFrame(results, index=["Precision", "Recall", "Accuracy", "F1"])
+
+        # Flatten the DataFrame into a Series
+        results_series = results_df.stack()
+
+        # Round the values to two decimal places
+        results_series = results_series.round(4)
+
+        # Return the Series of results
+        return results_series
 
 
 

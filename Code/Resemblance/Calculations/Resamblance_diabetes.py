@@ -11,12 +11,14 @@ import os
 pd.set_option('display.width', None)
 pd.set_option('display.max_rows', None)
 
-cat_features = ["Gender", "family_history_with_overweight", "FAVC", "CAEC", "SMOKE", "SCC", "CALC", "MTRANS", "NObeyesdad"]
-num_features = ["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE"]
+cat_features = ["Diabetes_binary", "HighBP", "HighChol", "CholCheck", "Smoker", "Stroke", "HeartDiseaseorAttack", "PhysActivity", "Fruits", "Veggies", "HvyAlcoholConsump", "AnyHealthcare", "NoDocbcCost", "GenHlth", "DiffWalk", "Sex", "Education", "Income"]
+num_features = ["BMI", "MentHlth", "PhysHlth", "Age"]
 
-real_data = pd.read_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/real/obesity_generation.csv")
+real_data = pd.read_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/real/diabetes_generation.csv")
 
-os.chdir("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/synthetic/obesity")
+output_dir = "/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/diabetes/Resamblance"
+
+os.chdir("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/synthetic/diabetes/synthetic_normal")
 
 all_data = pd.DataFrame()
 dataframes = {}
@@ -76,7 +78,9 @@ for file_names in sorted_files:
 
         results = pd.DataFrame(results, columns = [file_names])
 
+        output_file = os.path.join(output_dir, f"{file_names}_intermediate_results.csv")
+        results.to_csv(output_file, index=False)
+
         all_data = pd.concat([all_data, results], axis=1)
 
-all_data.to_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/obesity/Resamblance/Report_obesity_resamblance.csv", index = False)
-
+all_data.to_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/diabetes/Resamblance/Report_diabetes_resamblance.csv", index = False)

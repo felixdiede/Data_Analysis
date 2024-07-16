@@ -102,23 +102,24 @@ def execute_chi_squared_tests(real_data, synthetic_data, cat_features, alpha = 0
 
     return p_values, positive, negative
 
-def evaluate_tests(real, synthetic, num_features, cat_features):
-    __, positive_t_tests, negative_t_tests = execute_t_tests(real, synthetic, num_features)
-    __, positive_mann_whitney_tests, negative_mann_whitney_tests = execute_mann_whitney_tests(real, synthetic, num_features)
-    __, positive_ks_tests, negative_ks_tests = execute_ks_tests(real, synthetic, num_features)
-    __, positive_chi_squared_tests, negative_chi_squared_tests = execute_chi_squared_tests(real, synthetic, cat_features)
+def evaluate_categorical_tests(real, synthetic, cat_features):
+    p_chi2_squared, __, __ = execute_chi_squared_tests(real, synthetic, cat_features)
 
-    count_positive_numerical_tests = positive_t_tests + positive_mann_whitney_tests + positive_ks_tests
-    count_negative_numerical_tests = negative_t_tests + negative_mann_whitney_tests + negative_ks_tests
+    return p_chi2_squared
 
-    proportion_positive_numerical_tests = count_positive_numerical_tests / (count_positive_numerical_tests + count_negative_numerical_tests)
+def evaluate_numerical_tests(real, synthetic, num_features):
+    p_t_test, __, __ = execute_t_tests(real, synthetic, num_features)
+    p_mw_test, __, __ = execute_mann_whitney_tests(real, synthetic, num_features)
+    p_ks_test, __, __ = execute_ks_tests(real, synthetic, num_features)
 
-    count_positive_categorical_tests = positive_chi_squared_tests
-    count_negative_categorical_tests = negative_chi_squared_tests
 
-    proportion_positive_categorical_tests = count_positive_categorical_tests / (count_positive_categorical_tests + count_negative_categorical_tests)
+    data_dict = {
+        "t-test": p_t_test,
+        "Mann-Whitney": p_mw_test,
+        "Kolmogorov-Smirnov": p_ks_test
+    }
 
-    return proportion_positive_numerical_tests, proportion_positive_categorical_tests
+    return data_dict
 
 
 
@@ -163,20 +164,21 @@ def execute_wass_distances(real_data, synthetic_data):
 
     return dists, positive, negative
 
-def evaluate_distances(real_data, synthetic_data, num_features):
+def results_distances(real_data, synthetic_data, num_features):
     real_data_scaled = scale_data(real_data[num_features])
     synthetic_data_scaled = scale_data(synthetic_data[num_features])
 
-    __, positive_cosine_distances, negative_cosine_distances = execute_cosine_distances(real_data_scaled, synthetic_data_scaled)
-    __, positive_js_distances, negative_js_distances = execute_js_distances(real_data_scaled, synthetic_data_scaled)
-    __, positive_wass_distances, negative_wass_distances = execute_wass_distances(real_data_scaled, synthetic_data_scaled)
+    cos_distance, __, __ = execute_cosine_distances(real_data_scaled, synthetic_data_scaled)
+    js_distance, __, __ = execute_js_distances(real_data_scaled, synthetic_data_scaled)
+    wass_distance, __, __ = execute_wass_distances(real_data_scaled, synthetic_data_scaled)
 
-    count_positive_distances = positive_cosine_distances + positive_js_distances + positive_wass_distances
-    count_negative_distances = negative_cosine_distances + negative_js_distances + negative_wass_distances
+    data_dict = {
+        'Cosine distance': cos_distance,
+        'JS distance': js_distance,
+        'Wass distance': wass_distance
+    }
 
-    proportion_positive_distances = count_positive_distances / (count_positive_distances + count_negative_distances)
-
-    return proportion_positive_distances
+    return data_dict
 
 
 

@@ -5,12 +5,11 @@ sys.path.append("../Metrics")
 import pandas as pd
 from Utility_Metrics import trtr, tstr
 
-num_features = ["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE"]
+num_features = ["BMI", "MentHlth", "PhysHlth", "Age"]
 
-real_data = pd.read_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/real/obesity_generation.csv")
+real_data = pd.read_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/real/diabetes_generation.csv")
 
-os.chdir("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/synthetic/obesity/obesity_3")
-
+os.chdir("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Data/synthetic/diabetes/synthetic_normal")
 
 def custom_sort(file_name):
     if file_name.endswith(".csv"):
@@ -39,9 +38,18 @@ dataframes = {}
 results = pd.DataFrame()
 all_results = pd.DataFrame()
 
-values = trtr(real_data, "NObeyesdad", num_features)
+for file_names in sorted_files:
+    file_path = os.path.join(file_names)
+    dataframes[file_names] = pd.read_csv(file_path)
+    synthetic_data = dataframes[file_names]
+    print(file_names)
+    values = trtr(real_data, "Diabetes_binary", num_features)
 
-values.to_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/obesity/Utility/Report_obesity_trtr_3.csv", index=False)
+    results = pd.DataFrame(values, columns = [file_names])
+
+    all_results = pd.concat([all_results, results], axis = 1)
+
+all_results.to_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/diabetes/Utility/Report_diabetes_trtr.csv", index=False)
 
 dataframes = {}
 results = pd.DataFrame()
@@ -52,10 +60,10 @@ for file_names in sorted_files:
     dataframes[file_names] = pd.read_csv(file_path)
     synthetic_data = dataframes[file_names]
     print(file_names)
-    values = tstr(real_data, synthetic_data, "NObeyesdad", num_features)
+    values = tstr(real_data, synthetic_data, "Diabetes_binary", num_features)
 
     results = pd.DataFrame(values, columns = [file_names])
 
     all_results = pd.concat([all_results, results], axis = 1)
 
-all_results.to_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/obesity/Utility/Report_obesity_tstr_3.csv", index=False)
+all_results.to_csv("/Users/felixdiederichs/PycharmProjects/Data_Analysis/.venv/Reports/diabetes/Utility/Report_diabetes_tstr.csv", index=False)
